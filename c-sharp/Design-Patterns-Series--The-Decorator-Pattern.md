@@ -14,7 +14,8 @@ This means that when they come to you with additional statistics, instead of cre
 This is where the <strong>Decorator Pattern</strong> comes in.
 <blockquote>The Decorator Pattern attaches additional responsibilities to an object dynamically.  Decorators provide a flexible alternative to subclassing for extending functionality.</blockquote>
 With this pattern, you start out with an abstract class that will house the common functionality skeleton.  Let’s call it the <strong>Component</strong>.  In our case, there is the Display() method, and the team name.  Our initial requirements state that we are going to display the W-L-D records for a team.  At this point, we know we are definitely extending this abstract class, a.k.a. component, as a <strong>ConcreteComponent</strong>.
-[sourcecode]
+
+<pre><code>
 public abstract class TeamData
 //Component
 {
@@ -51,9 +52,9 @@ public class Matches : TeamData
 
     }
 }
-[/sourcecode]
+</code></pre>
 We know more requirements are coming, so how do we plan for the future? We create another abstract class, a.k.a <strong>Decorator</strong>, inheriting the <span style="color: #000000;"><strong>Component</strong> object, which is also an abstract class.  Any extension classes, a.k.a. <strong>ConcreteDecorators</strong>, will have the benefit of following the functionality skeleton with the flexibility of creating custom functionality. </span>
-[sourcecode]
+<pre><code>
 public abstract class TeamStatDecorator : TeamData
 //Decorator
 {
@@ -104,9 +105,9 @@ public class HomeAwayAdvantage : TeamStatDecorator
 }
 
 
-[/sourcecode]
+</code></pre>
 If at any point we would need to add another statistic functionality, we inherit from the TeamStatDecorator.  If you recall back, we mentioned that “has-a” relationships were preferred to inheritance and “is-a” relationships, but in our case, the classes are chained together at run-time.  Take a look at the code below.
-[sourcecode]
+<pre><code>
 public class DecoratorExample
 {
 
@@ -129,7 +130,7 @@ public class DecoratorExample
 
     }
 }
-[/sourcecode]
+</code></pre>
 <strong>Output:</strong>
 <span style="color: #3366ff;">Team Name: Manchester United
 Record (W|L|D): 9 | 2 | 1
