@@ -1,0 +1,110 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://raw.github.com/necolas/normalize.css/master/normalize.css" />
+    <link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
+</head>
+<body>
+<h1>Design Patterns Series: The Observer Pattern</h1>
+During last night's Superbowl game - did you pay attention to the score box at the top-left corner? Think about the code you would write to do the keep the score up to date.  Would you get it to poll every couple of seconds for updates?  Let's also say that hypothetically the same system fed the updates to NFL.com.  Are you going to have multiple systems now checking for updates? Or, is there perhaps a better way to do this?
+
+If you recall the my <a href="http://blog.image0.com/software-engineering/the-quintessential-oop-topic-design-patterns-a-series/">post</a> about design patterns, this problem has also been solved for you.  The design pattern that solves it is called <strong>The Observer Pattern </strong>and it too is described beautifully in the book on which this series is based: <strong><em><a href="http://www.amazon.com/First-Design-Patterns-Elisabeth-Freeman/dp/0596007124?&amp;camp=212361&amp;linkCode=wey&amp;tag=image0comblog-20&amp;creative=380725">Head First Design Patterns</a>.</em></strong>
+
+Here is the definition from the text:
+<blockquote>"The Observer Pattern defines a one-to-many relationship between a set of objects.  <strong>When the state of one object changes, all of its dependents are notified.</strong>"</blockquote>
+Lightbulb, yes? Hopefully? How about building a "push" type of notification mechanism that will notify the scoreboard, website, and any other subscriber that cares to be informed of the score?
+
+Before we get into the code details, it's important to visualize it from an architecture design perspective.
+<table style="width: 200px;" border="1">
+<tbody>
+<tr>
+<td><strong>Subject (abstract)</strong></td>
+</tr>
+<tr>
+<td>registerObserver()
+removeObserver()
+notifyObservers()</td>
+</tr>
+</tbody>
+</table>
+The Subject abstract class gets implemented by a real, a.k.a. concrete subject like the main score keeping system.  So now, this system can <strong>register</strong> many observers, like scoreboards, websites, phones, etc., as well as <strong>remove</strong> them, and mass <strong>notify</strong> them.  This ISubject has an IObserver interface that has a single method called <strong>update()</strong>.  This interface gets implemented by an actual observer that has implements this method which may update the scoreboard, phone app, or a website RSS feed.  For this to happen though, it must instantiate the concrete observer and <strong>register</strong> with it, which says "Hey, I'd like to subscribe to your events.  Please push an update to me anytime there is one and I'll do my own thing to update my interface - and don't worry, because you don't have to know the details.  You and I are loosely coupled that way."
+
+Another great example of loose coupling here.  If the score keeping system had to know the details of how to update a website, a phone app, a TV scoreboard, and a bunch of other devices, not only would you have a humungous amount of lines in your code, but you would also have to recompile and retest anytime you wanted to add a new device implementation.  With loose coupling, that's hidden in the actual observer object so that all the Subject has to know is that that device is registered and to send it an update when one exists.
+
+Now that we see the benefit, let's take a look at how you would implement the C# code for this.
+<em>Quick disclaimer: The .NET Framework has given us events and delegates, and while there are many ways to skin a cat and do this several ways, I am just using C# to show you the underlying object-oriented code to get this to work.</em>
+
+We create an interface for Observer and an abstract class for <strong>Subject</strong>
+IObserver.cs
+<pre><code>
+using System;
+
+public interface IObserver
+{
+     void Update(object subject);
+}
+</code></pre>
+Subject.cs
+<pre><code>
+using System;
+using System.Collections;
+
+public abstract class Subject
+{
+    private ArrayList observers = new ArrayList();
+
+    public void AddObserver(Observer observer)
+    {
+         observers.Add(observer);
+    }
+
+    public void RemoveObserver(Observer observer)
+    {
+        observers.Remove(observer);
+    }
+
+    public void Notify()
+    {
+          foreach(Observer observer in observers)
+          {
+               observer.Update(this);
+          }
+     }
+}
+</code></pre>
+ScoreKeeper.cs
+<pre><code>
+public class ScoreKeeper : Subject
+{
+      public int TeamOneScore {get;set;}
+      public int TeamTwoScore {get;set;}
+
+    //could be called by the master score keeper
+    public void ChangeScore(int scoreOne,int scoreTwo)
+    {
+         TeamOneScore = scoreOne;
+         TeamTwoScore = scoreTwo;
+
+          Notify();
+     }
+}
+</code></pre>
+ScoreWebForm.cs
+<pre><code>
+public class ScoreWebForm : IObserver
+{
+       public void Update(object subject)
+       {
+            //let's make sure the right subject
+            //called this method.
+            if(!(subject is ScoreKeeper)
+               return;
+
+            //update asp:label web controls
+           labelScore1.Text = ((ScoreKeeper)subject).TeamOneScore;
+           labelScore2.Text = ((ScoreKeeper)subject).TeamTwoScore;
+     }
+}
+</code></pre>
+
+There you have it.  Another problem solved by design patterns.  Hopefully, if you have not heard about design patterns before, you are slowly beginning to see the value.  Make sure to catch the entire <a href="/tag/design-pattern-series/">series</a> on my blog and get yourself a copy of the <a href="http://www.amazon.com/First-Design-Patterns-Elisabeth-Freeman/dp/0596007124?&amp;camp=212361&amp;linkCode=wey&amp;tag=image0comblog-20&amp;creative=380725">above mentioned book</a> if you haven't already done so.
+</body></html>
