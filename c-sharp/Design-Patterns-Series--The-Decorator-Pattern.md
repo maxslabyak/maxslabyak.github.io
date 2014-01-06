@@ -1,4 +1,5 @@
-<strong>Good News</strong>: You just landed a gig at as a developer for the Soccer department of ESPN! <strong>Bad News</strong>: Deadlines are tight and documented requirements are scarce.
+<strong>Good News</strong>: You just landed a gig at as a developer for the Soccer department of ESPN! 
+<strong>Bad News</strong>: Deadlines are tight and documented requirements are scarce.
 
 In fact, the entire project is behind, but shortcuts and bad code are not tolerated and they need you to implement a robust system, due yesterday.
 
