@@ -1,0 +1,34 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://raw.github.com/necolas/normalize.css/master/normalize.css" />
+    <link href="http://kevinburke.bitbucket.org/markdowncss/markdown.css" rel="stylesheet"></link>
+</head>
+<body>
+<h3>Blog.Image0.com is now <a href="http://maxslabyak.com/" target="_blank">MaxSlabyak.com</a>. This post has been archived at a GitHub Repository at maxslabyak.github.io</h3>
+<h1>Using Generic Http Handlers to Speed Up ASP.Net - Writing XML </h1>
+<h2>ASP.Net Page vs. Generic HTTP Handler</h2>
+Web forms (aspx files) and web controls (ascx files) that populate the forms are the two most common elements we create in an ASP.Net web applications.  Web forms are great. You put in some &lt;asp:tags /&gt; and ASP.Net does the rest to render the HTML, and it's done in a lot less lines than you would have to write with classic ASP 3.0.
+
+With all this magic, however, there is a lot that happens behind the curtains.  There are 11 events that take place during the loading of an ASP.Net page.
+<ul></ul>
+A Generic .ashx handler just has the <strong>ProcessRequest</strong> method.
+<h2>XML Output</h2>
+For something like writing raw XML to the browser which may not have any page controls like buttons or images, this is a perfect example of where you can benefit from the performance gain by using a generic http handler instead of wiring up events you won't use with an .aspx page.  The code to output the XML is fairly simple.
+<pre><code>
+public class Handler : IHttpHandler 
+{
+      public void ProcessRequest (HttpContext context) 
+       {
+           context.Response.ContentType = "text/xml";
+           context.Response.Write(
+                 MyBLL.XmlHelper.GetFor(someobject)); 
+      }
+
+      public bool IsReusable 
+      {
+           get { return false; }
+      }
+}
+</code></pre>
+You should notice at least a 5 - 10% improvement in performance versus an asp.net page.
+</body></html>
