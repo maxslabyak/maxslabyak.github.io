@@ -1,0 +1,145 @@
+<strong>Good News</strong>: You just landed a gig at as a developer for the Soccer department of ESPN! 
+<strong>Bad News</strong>: Deadlines are tight and documented requirements are scarce.
+
+In fact, the entire project is behind, but shortcuts and bad code are not tolerated and they need you to implement a robust system, due yesterday.
+
+<strong>The Project</strong>: Implement a system that displays statistics for a given team.
+
+<strong>The Challenge</strong>:  In the requirements that are present, it specifies that you are to provide the basic win-loss-draw stats for each team, but you heard that more statistics will need to be developed.  You don’t know when they will come and you don’t know which stats they will be.  What you do know is that the generic functionality will have functionality to display the statistics in a tabular fashion.
+
+They run a tight shop here, so a good OOP design is expected.  Perhaps, one that adheres to the <strong>Open-Closed Principle</strong>, which in the <a href="http://www.amazon.com/First-Design-Patterns-Elisabeth-Freeman/dp/0596007124?&amp;camp=212361&amp;linkCode=wey&amp;tag=image0comblog-20&amp;creative=380725">Head First: Design Patterns</a> text states that
+<blockquote>Classes should be open for extension, but closed for modification.</blockquote>
+This means that when they come to you with additional statistics, instead of creating additional lines in the existing class, creating the need to recode, recompile, and retest, you close the existing class, but code the structure in such a way that you can add extension classes using the principles you have learned so far.
+
+This is where the <strong>Decorator Pattern</strong> comes in.
+<blockquote>The Decorator Pattern attaches additional responsibilities to an object dynamically.  Decorators provide a flexible alternative to subclassing for extending functionality.</blockquote>
+With this pattern, you start out with an abstract class that will house the common functionality skeleton.  Let’s call it the <strong>Component</strong>.  In our case, there is the Display() method, and the team name.  Our initial requirements state that we are going to display the W-L-D records for a team.  At this point, we know we are definitely extending this abstract class, a.k.a. component, as a <strong>ConcreteComponent</strong>.
+
+<pre><code>
+public abstract class TeamData
+//Component
+{
+    public abstract string Display();
+    public string TeamName;
+    private string _teamName;
+}
+
+public class Matches : TeamData
+//ConcreteComponent
+{
+    public int Wins {get; set;}
+    public int Losses {get;set;}
+    public int Draws {get;set;}
+
+    public Matches(string teamName,int wins,int losses,int draws)
+    {
+        TeamName = teamName;
+        Wins = wins;
+        Losses = losses;
+        Draws = draws;
+    }
+
+    public override string Display()
+    {
+        var sbStats = new StringBuilder();
+        sbStats.Append("Team Name: " + TeamName);
+        sbStats.Append("Record (W|L|D): ");
+        sbStats.Append(Wins + "|");
+        sbStats.Append(Losses + "|");
+        sbStats.Append(Draws);
+
+        return sbStats.ToString();
+
+    }
+}
+</code></pre>
+We know more requirements are coming, so how do we plan for the future? We create another abstract class, a.k.a <strong>Decorator</strong>, inheriting the <span style="color: #000000;"><strong>Component</strong> object, which is also an abstract class.  Any extension classes, a.k.a. <strong>ConcreteDecorators</strong>, will have the benefit of following the functionality skeleton with the flexibility of creating custom functionality. </span>
+<pre><code>
+public abstract class TeamStatDecorator : TeamData
+//Decorator
+{
+    protected TeamData teamData;
+    public void AttachComponent(TeamData _teamData)
+    {
+        teamData = _teamData;
+    }
+    public override string Display()
+    {
+        if (teamData != null)
+            teamData.Display();
+    }
+}
+
+public class HomeAwayAdvantage : TeamStatDecorator
+//ConcreteDecorator
+{
+    public int GoalsScoredHome { get; set; }
+    public int GoalsScoredAway { get; set; }
+    public int GoalsConcededHome { get; set; }
+    public int GoalsConcededAway { get; set; }
+
+    public HomeAwayAdvantage(int goalsScoredHome, int goalsScoredAway,
+    int goalsConcededHome, int goalsConcededAway, string teamName)
+    {
+        TeamName = teamName; //inherited
+        GoalsScoredHome = goalsScoredHome;
+        GoalsScoredAway = goalsScoredAway;
+        GoalsConcededHome = goalsConcededHome;
+        GoalsConcededAway = goalsConcededAway;
+
+    }
+    public override string Display()
+    {
+        //first we call the class we inherit from - TeamStatDecorator
+        base.Display();
+            
+        var sbStats = new StringBuilder();
+        sbStats.Append("Team Name: " + TeamName);
+        sbStats.Append("Goals Scored (Home|Away): ");
+        sbStats.Append(GoalsScoredHome + "|" + GoalsScoredAway);
+        sbStats.Append("Goals Conceded (Home|Away): ");
+        sbStats.Append(GoalsConcededHome + "|" + GoalsConcededAway);
+
+        return sbStats.ToString();
+    }
+}
+
+
+</code></pre>
+If at any point we would need to add another statistic functionality, we inherit from the TeamStatDecorator.  If you recall back, we mentioned that “has-a” relationships were preferred to inheritance and “is-a” relationships, but in our case, the classes are chained together at run-time.  Take a look at the code below.
+<pre><code>
+public class DecoratorExample
+{
+
+    static void Main()
+    {
+        // Create ConcreteComponent and decorator
+        var matches = new Matches("Machester United", 9,2,1);
+        var homeAwayAdvantage = new HomeAwayAdvantage("Machester United", 14, 3, 5, 4);
+        //var otherDisplayType1 = new OtherDisplayType1();
+        //var otherDisplayType2 = new OtherDisplayType2();
+
+        // Link them
+        homeAwayAdvantage.AttachComponent(matches);
+        //otherDisplayType1.AttachComponent(homeAwayAdvantage);
+        //otherDisplayType2.AttachComponent(otherDisplayType1);
+
+        //call the last overridden method in the chain
+        Console.WriteLine(homeAwayAdvantage.Display());
+        //Console.WriteLine(otherDisplayType2.Display());
+
+    }
+}
+</code></pre>
+<strong>Output:</strong>
+<span style="color: #3366ff;">Team Name: Manchester United
+Record (W|L|D): 9 | 2 | 1
+<strong></strong></span>
+
+<span style="color: #3366ff;">Team Name: Manchester United
+Goals Scored (Home | Away): 14 | 3
+Goals Conceded (Home | Away): 5 | 4</span><strong> </strong>
+
+As you can see, we can keep adding decorators (otherDisplayType1,otherDisplayType2) without touching our main TeamData abstract class.  If we want custom functionality with the decorators, we simply put it into the decorator abstract class and stick to the open-closed principle.
+
+Hope this made sense.  Would love to hear your feedback!
